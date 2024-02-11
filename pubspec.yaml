@@ -1,7 +1,13 @@
-name: langchain_workspace
+name: hello_world_backend
+description: A sample backend service integrating LangChain.
+version: 1.0.0
+publish_to: none
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ^3.0.5
 
-dev_dependencies:
-  melos: 4.0.0
+dependencies:
+  langchain: ^0.4.1
+  langchain_google: ^0.2.3
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
