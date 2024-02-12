@@ -15,7 +15,7 @@ class SummarizeService {
     _llm = ChatGoogleGenerativeAI(
       apiKey: llmApiKey,
       defaultOptions: const ChatGoogleGenerativeAIOptions(
-        temperature: 0.9,
+        temperature: 0.2,
       ),
     );
   }
@@ -23,26 +23,27 @@ class SummarizeService {
   late final ChatGoogleGenerativeAI _llm;
 
     final _mapPrompt = PromptTemplate.fromTemplate(
-      'Summarize this content: {context}',
+      'Write a concise summary in Korean of this content: {context}',
     );
 
     final _reducePrompt = PromptTemplate.fromTemplate(
-      'Combine these summaries: {context}',
+      'Combine these summaries: {context}, and refine it to be coherent',
     );
 
 
   Future<String> generateSummary(final List<String> contexts) async {
-    final mapLlmChain = LLMChain(prompt: _mapPrompt, llm: _llm);
-
+    final mapLlmChain = LLMChain(prompt: _mapPrompt, llm: _llm);  // Apply `mapPrompt` to each value
     final reduceLlmChain = LLMChain(prompt: _reducePrompt, llm: _llm);
-    final reduceDocsChain = StuffDocumentsChain(llmChain: reduceLlmChain);
+    final reduceDocsChain = StuffDocumentsChain(llmChain: reduceLlmChain);  // Combine the summaries with `reducePrompt`
     final reduceChain = MapReduceDocumentsChain(
       mapLlmChain: mapLlmChain,
       reduceDocumentsChain: reduceDocsChain,
     );
 
-    // (Eng) Takes the json-formatted list received in the request, converts it to a Document list, and makes it available to the chain.
-    // (한) 요청으로 받은 json 형식의 목록을, Document 리스트로 변환하여 체인에서 사용 가능하게 함.
+    // (Eng) After the json format content received as a request is converted to a List of Strings in the API handler method (api.dart - summaryHandler),
+    //       it is converted to a Document-type List, making it available to the chain.
+    // (한) 요청으로 받은 json 형식의 내용을 API 핸들러 메소드( api.dart - summaryHandler )에서 문자열 리스트로 변환하여 전달하면,
+    //     Document형의 리스트로 변환하여 체인에서 사용 가능하게 함.
     final List<Document> docs = contexts.map((final context) => Document(pageContent: context)).toList();
 
     final res = await reduceChain.run(docs);

@@ -18,7 +18,7 @@ class Api {
     final payload = jsonDecode(await request.readAsString());
     final contexts = payload['contexts'];
 
-    final summmary = await summarizeService.generateSummary(contexts.cast<String>());  // List<String>으로 변환하여 요약 생성 함수로 전달
+    final summmary = await summarizeService.generateSummary(contexts.cast<String>());  // List<String>으로 변환하여 요약 생성 메소드( summarize.dart - generateSummary )로 전달
 
     return Response.ok(
       headers: {'Content-type': 'application/json'},
