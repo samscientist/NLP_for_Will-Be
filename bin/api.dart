@@ -4,26 +4,26 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-import 'sonnets.dart';
+import 'summarize.dart';
 
 class Api {
-  final sonnetsService = SonnetsService();
+  final summarizeService = SummarizeService();
 
   Handler get handler {
-    final router = Router()..post('/v1/sonnets', _sonnetHandler);
+    final router = Router()..post('/v1/summary', _summaryHandler);
     return router.call;
   }
 
-  Future<Response> _sonnetHandler(final Request request) async {
+  Future<Response> _summaryHandler(final Request request) async {
     final payload = jsonDecode(await request.readAsString());
-    final topics = payload['topics'];
+    final contexts = payload['contexts'];
 
-    final sonnet = await sonnetsService.generateSonnet(topics.cast<String>());
+    final summmary = await summarizeService.generateSummary(contexts.cast<String>());  // List<String>으로 변환하여 요약 생성 함수로 전달
 
     return Response.ok(
       headers: {'Content-type': 'application/json'},
       jsonEncode({
-        'sonnet': sonnet,
+        '요약': summmary,
       }),
     );
   }
