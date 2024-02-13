@@ -23,11 +23,13 @@ class SummarizeService {
   late final ChatGoogleGenerativeAI _llm;
 
     final _mapPrompt = PromptTemplate.fromTemplate(
-      'Write a concise summary in Korean of this content: {context}',
+      // 'Write a concise summary in Korean of this content: {context}',
+      '3인칭 시점으로 {context}에 대해 한국어로 요약해주세요. 3줄 이하로 요약해주세요.',
     );
 
     final _reducePrompt = PromptTemplate.fromTemplate(
-      'Combine these summaries: {context}, and refine it to be coherent',
+      // 'Combine these summaries: {context}, and refine it to be coherent',
+      '글에 통일성이 생기도록, {context}의 내용을 모두 포함하여 정리해주세요.',
     );
 
 
