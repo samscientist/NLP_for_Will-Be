@@ -14,6 +14,7 @@ class SummarizeService {
     _llm = ChatGoogleGenerativeAI(
       apiKey: llmApiKey,
       defaultOptions: const ChatGoogleGenerativeAIOptions(
+        model: 'gemini-pro',
         temperature: 0.2,
       ),
     );
@@ -41,7 +42,7 @@ class SummarizeService {
   );
 
   Future<String> generateSummary(final List<String> contexts) async {
-    final mapLlmChain = LLMChain(prompt: _mapPromptTemplate, llm: _llm);  // Apply `mapPrompt` to each value
+    final mapLlmChain = LLMChain(prompt: _mapPromptTemplate, llm: _llm);  // Define what prompt to apply, and what LLM to use; for each doc
     final reduceLlmChain = LLMChain(prompt: _reducePromptTemplate, llm: _llm);
     final reduceDocsChain = StuffDocumentsChain(llmChain: reduceLlmChain);  // Combine the summaries with `reducePrompt`
     final reduceChain = MapReduceDocumentsChain(
@@ -69,44 +70,51 @@ class SummarizeService {
 }
 
 
-// ignore: camel_case_types
-class Summarize_Report extends SummarizeService {
+class SummarizeReport extends SummarizeService {
+  // late final ChatGoogleGenerativeAI _llm;
 
-  // ↱ 린터 오해로 보이며, 이애 따라 무시 처리
+  // ↱ 린터 오해로 보이며, 이에 따라 무시 처리
   // ignore: annotate_overrides, overridden_fields
-  final _organizeDayPromptTemplate = PromptTemplate.fromTemplate(
+  final _refineDailyReportPrompt = PromptTemplate.fromTemplate(
     // 'Write a concise summary in Korean of this content: {context}',
     '''
-    아래의 조건을 만족하며 {context}의 내용을 종합하여 정리해주세요.
+    아래의 조건을 만족하며, {record}의 내용을 종합하여 정리해주세요.
     - 언어: 한국어
-    - 형식: '<상황>에서 <행동>을 <빈도>번 하고, 이에 따라 선생님께서 <조치>를 했다. 이에 대해, <특이사항>' ('<'와 '>'로 감싼 내용은 Nonterminal Symbol로, 채워야하는 영역)
+    - 시점: 3인칭
+    - 형식: '<상황>에서 <행동>을 <빈도>번 하고, 이에 따라 <조치>를 했다. 이에 대해, <특이사항>' ('<'와 '>'로 감싼 내용은 Nonterminal Symbol로, 채워야 하는 영역)
     ''',
   );
 
   // ignore: annotate_overrides, overridden_fields
-  final _reducePromptTemplate = PromptTemplate.fromTemplate(
+  final _summarizeWeekPrompt = PromptTemplate.fromTemplate(
     // 'Combine these summaries: {context}, and refine it to be coherent',
     '''
-    아래의 사항을 고려하며,{context}의 내용을 하나의 글로 정리해주세요.
+    아래의 사항을 고려하며, {record}의 내용을 하나의 글로 정리해주세요.
     - 원본 내용과 다른 내용 없음
     - 한글 맞춤법 검사
     - 순서대로 나열
     ''',
   );
 
-  @override
-  Future<String> generateSummary(final List<String> contexts) async {
-    final mapLlmChain = LLMChain(prompt: _mapPromptTemplate, llm: _llm);  // Apply `mapPrompt` to each value
-    final reduceLlmChain = LLMChain(prompt: _reducePromptTemplate, llm: _llm);
-    final reduceDocsChain = StuffDocumentsChain(llmChain: reduceLlmChain);  // Combine the summaries with `reducePrompt`
-    final reduceChain = MapReduceDocumentsChain(
-      mapLlmChain: mapLlmChain,
-      reduceDocumentsChain: reduceDocsChain,
+  Future<String> generateWeeklyReport(final List<dynamic> records) async {  // { "records":[ {}, {}, ... ] }
+    // ignore: non_constant_identifier_names
+    final llmChain_organizeDailyReport = LLMChain(prompt: _refineDailyReportPrompt, llm: _llm);  // Define what prompt to apply, and what LLM to use; for each doc
+    // ignore: non_constant_identifier_names
+    final llmChain_weeklyReport = LLMChain(prompt: _summarizeWeekPrompt, llm: _llm);
+
+    final dailyReportChain = StuffDocumentsChain(llmChain: llmChain_weeklyReport);  // Combine the summaries with `reducePrompt`
+    // final weeklyReportChain = StuffDocumentsChain(llmChain: llmChain_weeklyReport);  // Combine the summaries with `reducePrompt`
+    
+    final weeklyReportChain = MapReduceDocumentsChain(
+      mapLlmChain: llmChain_organizeDailyReport,
+      reduceDocumentsChain: dailyReportChain,
     );
+    
+    ////final dailyReport = await dailyReportChain.run(contexts);
 
-    final List<Document> docs = contexts.map((final context) => Document(pageContent: context)).toList();
+    final List<Document> docs = records.map((final record) => Document(pageContent: record.toString())).toList();
 
-    final res = await reduceChain.run(docs);
+    final res = await weeklyReportChain.run(docs);
     return res;
   }
 }

@@ -8,7 +8,7 @@ import 'api.dart';
 
 Future<void> main() async {
   final port = int.parse(Platform.environment['PORT'] ?? '8080');
-  final api = Api_GeneralSummary();
+  final api = Api_ReportSummary();
   final handler =
       const Pipeline().addMiddleware(logRequests()).addHandler(api.handler);
   final server = await io.serve(handler, InternetAddress.anyIPv4, port);
