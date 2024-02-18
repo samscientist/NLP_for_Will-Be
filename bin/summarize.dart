@@ -15,7 +15,7 @@ class SummarizeService {
       apiKey: llmApiKey,
       defaultOptions: const ChatGoogleGenerativeAIOptions(
         model: 'gemini-pro',
-        temperature: 0.2,
+        temperature: 0,
       ),
     );
   }
@@ -79,9 +79,13 @@ class SummarizeReport extends SummarizeService {
     // 'Write a concise summary in Korean of this content: {context}',
     '''
     아래의 조건을 만족하며, {record}의 내용을 종합하여 정리해주세요.
-    - 언어: 한국어
+    - 분량: 문장 3개 이하
+    - 언어: 한국어 문어체
     - 시점: 3인칭
-    - 형식: '<상황>에서 <행동>을 <빈도>번 하고, 이에 따라 <조치>를 했다. 이에 대해, <특이사항>' ('<'와 '>'로 감싼 내용은 Nonterminal Symbol로, 채워야 하는 영역)
+    - 항목 설명: 'stamps'-발생 시각; 'situation'-상황; 'action'-조치; 'etc'-특이사항;
+    - 형식: "<상황>에서 <행동>을 하고, 이에 따라 <조치>를 했다(<빈도>번). 이에 대해, <특이사항>" ('<'와 '>'로 감싼 내용은 Nonterminal Symbol로, 채워야 하는 영역)
+    - 기타: 빈도는 발생 시각의 개수에서 추출
+    - 예시: "수업 시간에 의자에 앉아야 하는 상황에서 의자에 앉지 않고 누워서 소리지름 (3번). 이에 따라 환경 분리 조치를 취함. 하지만 행동은 나아지지 않고 오히려 심해짐."
     ''',
   );
 
@@ -90,9 +94,10 @@ class SummarizeReport extends SummarizeService {
     // 'Combine these summaries: {context}, and refine it to be coherent',
     '''
     아래의 사항을 고려하며, {record}의 내용을 하나의 글로 정리해주세요.
-    - 원본 내용과 다른 내용 없음
+    - '~일차'의 형식으로 묶어서 정리, 순서대로 나열
+    - 모든 {record}에 대한 언급, 만야 다섯 개의 묶음이 있다면 다섯 개 모두 표현
+    - 원본 내용 다른 내용은 포함하지 않음
     - 한글 맞춤법 검사
-    - 순서대로 나열
     ''',
   );
 
