@@ -78,14 +78,15 @@ class SummarizeReport extends SummarizeService {
   final _refineDailyReportPrompt = PromptTemplate.fromTemplate(
     // 'Write a concise summary in Korean of this content: {context}',
     '''
-    아래의 조건을 만족하며, {record}의 내용을 종합하여 정리해주세요.
+    너는 특수 교육 현장의 교사가 학생의 문제행동의 정확한 원인을 찾기 위해 기록을 정리하는 역할을 맡을 거야.
+    아래의 조건을 만족하며, {record}의 내용을 종합하여 정리해줘.
     - 분량: 문장 3개 이하
-    - 언어: 한국어 문어체
+    - 언어: 한국어 문어체, 명사형으로 문장 마무리.
     - 시점: 3인칭
     - 항목 설명: 'stamps'-발생 시각 리스트; 'situation'-상황; 'action'-조치; 'etc'-특이사항;
     - 'stamps' 안에 기록된 발생 시각의 입력 형식은 'HH:MM'.
-    - 빈도는 'stamps'의 개수에서 추출.
-    - 특이 사항을 강조
+    - 'stamps' 안에 기록된 타임스탬프 개수에서 빈도를 추출.
+    - 특이 사항의 주요 내용 반드시 포함. 
     - 형식: "<일차> - <상황>에서 <행동>을 하고, 이에 따라 <조치>를 함. / (<빈도>회). 이에 대한 특이 사항으로는 <특이사항>."
       - 위 형식에서 ('<'와 '>'로 감싼 내용은 Nonterminal Symbol로, 채워야 하는 영역)
     - 예시: "오전 수업 시간에 의자에 앉아야 하는 상황에서 의자에 앉지 않고 누워서 소리지름(3회). 이에 따라 환경 분리 조치. 하지만 행동은 나아지지 않고 오히려 심해짐."
@@ -96,9 +97,10 @@ class SummarizeReport extends SummarizeService {
   final _summarizeWeekPrompt = PromptTemplate.fromTemplate(
     // 'Combine these summaries: {context}, and refine it to be coherent',
     '''
-    아래의 사항을 고려하며, {record}의 내용을 하나의 글로 정리해주세요.
+    너는 특수 교육 현장의 교사가 학생의 문제행동의 정확한 원인을 찾기 위해 기록을 정리하는 역할을 맡을 거야.
+    아래의 사항을 고려하며, {record}의 내용을 하나의 글로 정리해줘.
+    - 모든 {record}에 대한 언급, 각 {record}를 각각을 일차로 표현
     - '~일차'의 형식으로 묶어서 정리, 순서대로 나열
-    - 모든 {record}에 대한 언급, 만약 다섯 개의 묶음이 있다면 다섯 개 각각을 일차로 표현
     - 원본 내용 다른 내용은 포함하지 않음
     - 한글 맞춤법 검사
     - 예시 출력 (내용의 생략은 '...'으로 처리)
